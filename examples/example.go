@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yunionio/structarg"
+	"yunion.io/x/structarg"
 )
 
 // define default arguments
