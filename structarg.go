@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/yunionio/log"
-	"github.com/yunionio/pkg/gotypes"
-	"github.com/yunionio/pkg/utils"
+	"yunion.io/x/log"
+	"yunion.io/x/pkg/gotypes"
+	"yunion.io/x/pkg/utils"
 )
 
 type BaseOptions struct {
