@@ -160,3 +160,14 @@ func TestRequired(t *testing.T) {
 		}
 	})
 }
+
+func TestNonPositionalRequiredWithDefault(t *testing.T) {
+	_, err := newParser(
+		&struct {
+			Opt int `default:100 required:true`
+		}{},
+	)
+	if err == nil {
+		t.Errorf("should error for non-positional argument with default value and required attribute")
+	}
+}
