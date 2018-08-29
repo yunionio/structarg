@@ -171,3 +171,24 @@ func TestNonPositionalRequiredWithDefault(t *testing.T) {
 		t.Errorf("should error for non-positional argument with default value and required attribute")
 	}
 }
+
+func TestBoolField(t *testing.T) {
+	s := &struct {
+		Bool         bool
+		BoolP        *bool
+		BoolDefault  bool  `default:true`
+		BoolPDefault *bool `default:true`
+	}{}
+	p, err := newParser(s)
+	if err != nil {
+		t.Fatalf("newParser failed: %s", err)
+	}
+	args := []string{"--bool", "--bool-p", "--bool-default", "--bool-p-default"}
+	err = p.ParseArgs(args, false)
+	if err != nil {
+		t.Fatalf("ParseArgs failed: %s", err)
+	}
+	if !(s.Bool && *s.BoolP && !s.BoolDefault && !*s.BoolPDefault) {
+		t.Errorf("wrong parse result: %#v", s)
+	}
+}
