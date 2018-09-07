@@ -9,7 +9,9 @@ import (
 
 type stringDistance struct {
 	str  string
+	/* hanming distance */
 	dist int
+	/* similarity rate, 0~1: totally different ~ identical */
 	rate float64
 }
 
