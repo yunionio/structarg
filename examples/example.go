@@ -57,6 +57,10 @@ func main() {
 		fmt.Printf("Run test %s with argument \"%s\" and \"%s\"\n", suboptions.NAME, suboptions.Arg1, suboptions.Arg2)
 		return nil
 	})
+	subcmd.AddSubParser(&TestOptions{}, "test2", "Run a test 2", func(suboptions *TestOptions) error {
+		fmt.Printf("Run test %s with argument \"%s\" and \"%s\"\n", suboptions.NAME, suboptions.Arg1, suboptions.Arg2)
+		return nil
+	})
 	e = parser.ParseArgs(os.Args[1:], false)
 	options := parser.Options().(*Options)
 	if len(options.Config) > 0 {
