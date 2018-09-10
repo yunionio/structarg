@@ -192,3 +192,40 @@ func TestBoolField(t *testing.T) {
 		t.Errorf("wrong parse result: %#v", s)
 	}
 }
+
+func TestChoices(t *testing.T) {
+	s := &struct {
+		String string `choices:tcp|udp|http|https`
+	}{}
+	p, err := newParser(s)
+	if err != nil {
+		t.Fatalf("newParser failed: %s", err)
+	}
+	args := []string{"--string", ""}
+	t.Run("good choices", func(t *testing.T) {
+		choices := []string{"tcp", "udp", "http", "https"}
+		for _, choice := range choices {
+			args[1] = choice
+			err = p.ParseArgs(args, false)
+			if err != nil {
+				t.Fatalf("ParseArgs failed: %s", err)
+			}
+			if s.String != choice {
+				t.Errorf("wrong parse result: want %q, got %q", choice, s.String)
+			}
+		}
+	})
+	t.Run("bad choices", func(t *testing.T) {
+		choices := []string{"", "et"}
+		for _, choice := range choices {
+			args[1] = choice
+			err = p.ParseArgs(args, false)
+			if err == nil {
+				t.Fatalf("ParseArgs should error")
+			}
+			if s.String != "" {
+				t.Errorf("Struct member should not be set, got %s", s.String)
+			}
+		}
+	})
+}
