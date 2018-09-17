@@ -167,8 +167,11 @@ const (
 
 func (this *ArgumentParser) addStructArgument(tp reflect.Type, val reflect.Value) error {
 	for i := 0; i < tp.NumField(); i++ {
-		f := tp.Field(i)
 		v := val.Field(i)
+		if !v.CanSet() {
+			continue
+		}
+		f := tp.Field(i)
 		if f.Type.Kind() == reflect.Struct {
 			e := this.addStructArgument(f.Type, v)
 			if e != nil {

@@ -273,3 +273,15 @@ func TestArgValue(t *testing.T) {
 		})
 	}
 }
+
+func TestIgnoreUnexported(t *testing.T) {
+	s := &struct {
+		unexported string
+	}{}
+	p, err := newParser(s)
+	if err != nil {
+		t.Fatalf("newParser failed: %s", err)
+	}
+	args := []string{"--string", ""}
+	p.ParseArgs(args, true)
+}
