@@ -229,3 +229,59 @@ func TestChoices(t *testing.T) {
 		}
 	})
 }
+
+func TestArgValue(t *testing.T) {
+	s := &struct {
+		String string
+	}{}
+	p, err := newParser(s)
+	if err != nil {
+		t.Fatalf("newParser failed: %s", err)
+	}
+	args := []string{"--string", ""}
+	cases := []struct {
+		name  string
+		value string
+	}{
+		{
+			name:  "with space",
+			value: `Hello world`,
+		},
+		{
+			name:  "with single quote",
+			value: `'Hello 'world'`,
+		},
+		{
+			name:  "with double quote",
+			value: `"Hello "world"`,
+		},
+		{
+			name:  "with newline and tab",
+			value: `Hello\n\tworld\n`,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			args[1] = c.value
+			err := p.ParseArgs(args, false)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if s.String != c.value {
+				t.Errorf("want %s, got %s", c.value, s.String)
+			}
+		})
+	}
+}
+
+func TestIgnoreUnexported(t *testing.T) {
+	s := &struct {
+		unexported string
+	}{}
+	p, err := newParser(s)
+	if err != nil {
+		t.Fatalf("newParser failed: %s", err)
+	}
+	args := []string{"--string", ""}
+	p.ParseArgs(args, true)
+}
