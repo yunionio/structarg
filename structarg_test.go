@@ -173,24 +173,61 @@ func TestNonPositionalRequiredWithDefault(t *testing.T) {
 }
 
 func TestBoolField(t *testing.T) {
-	s := &struct {
-		Bool         bool
-		BoolP        *bool
-		BoolDefault  bool  `default:true`
-		BoolPDefault *bool `default:true`
-	}{}
-	p, err := newParser(s)
-	if err != nil {
-		t.Fatalf("newParser failed: %s", err)
-	}
-	args := []string{"--bool", "--bool-p", "--bool-default", "--bool-p-default"}
-	err = p.ParseArgs(args, false)
-	if err != nil {
-		t.Fatalf("ParseArgs failed: %s", err)
-	}
-	if !(s.Bool && *s.BoolP && !s.BoolDefault && !*s.BoolPDefault) {
-		t.Errorf("wrong parse result: %#v", s)
-	}
+	t.Run("default (no flags)", func(t *testing.T) {
+		s := &struct {
+			Bool              bool
+			BoolP             *bool
+			BoolDefaultTrue   bool  `default:true`
+			BoolPDefaultTrue  *bool `default:true`
+			BoolDefaultFalse  bool  `default:false`
+			BoolPDefaultFalse *bool `default:false`
+		}{}
+		p, err := newParser(s)
+		if err != nil {
+			t.Fatalf("newParser failed: %s", err)
+		}
+		args := []string{}
+		err = p.ParseArgs(args, false)
+		if err != nil {
+			t.Fatalf("ParseArgs failed: %s", err)
+		}
+		if !(!s.Bool && s.BoolP == nil &&
+			s.BoolDefaultTrue && s.BoolPDefaultTrue != nil && *s.BoolPDefaultTrue &&
+			!s.BoolDefaultFalse && s.BoolPDefaultFalse != nil && !*s.BoolPDefaultFalse) {
+			t.Errorf("wrong parse result: %#v", s)
+		}
+	})
+	t.Run("--flags", func(t *testing.T) {
+		s := &struct {
+			Bool              bool
+			BoolP             *bool
+			BoolDefaultTrue   bool  `default:true`
+			BoolPDefaultTrue  *bool `default:true`
+			BoolDefaultFalse  bool  `default:false`
+			BoolPDefaultFalse *bool `default:false`
+		}{}
+		p, err := newParser(s)
+		if err != nil {
+			t.Fatalf("newParser failed: %s", err)
+		}
+		args := []string{
+			"--bool",
+			"--bool-p",
+			"--bool-default-true",
+			"--bool-p-default-true",
+			"--bool-default-false",
+			"--bool-p-default-false",
+		}
+		err = p.ParseArgs(args, false)
+		if err != nil {
+			t.Fatalf("ParseArgs failed: %s", err)
+		}
+		if !(s.Bool && s.BoolP != nil && *s.BoolP &&
+			!s.BoolDefaultTrue && s.BoolPDefaultTrue != nil && !*s.BoolPDefaultTrue &&
+			s.BoolDefaultFalse && s.BoolPDefaultFalse != nil && *s.BoolPDefaultFalse) {
+			t.Errorf("wrong parse result: %#v", s)
+		}
+	})
 }
 
 func TestChoices(t *testing.T) {
