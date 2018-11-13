@@ -9,13 +9,31 @@ import (
 
 // define default arguments
 type Options struct {
-	Help         bool   `help:"Show help" short-token:"h"`
-	Debug        bool   `help:"Show debug information"`
-	Timeout      int    `default:"600" help:"Maximal number of seconds to wait for a response"`
-	AuthURLStr   string `default:"$AUTH_URL" help:"Authentication URL, default to env[AUTH_URL]"`
-	EndpointType string `default:"publicURL" help:"Default to env[ENPOINT_TYPE] or publicURL" choices:"publicURL|internalURL"`
-	Config       string `help:"Configuration file path"`
-	SUBCOMMAND   string `help:"climc subcommand" subcommand:"true"`
+	structarg.BaseOptions
+
+	Region  string `help:"Region name or ID"`
+	Port    int    `help:"The port that the service runs on"`
+	Address string `help:"The IP address to serve on (set to 0.0.0.0 for all interfaces)" default:"0.0.0.0"`
+
+	AuthURL       string   `help:"Keystone auth URL" alias:"auth-uri"`
+	AdminUser     string   `help:"Admin username"`
+	AdminDomain   string   `help:"Admin user domain"`
+	AdminPassword string   `help:"Admin password"`
+	AdminProject  string   `help:"Admin project" default:"system" alias:"admin-tenant-name"`
+	CorsHosts     []string `help:"List of hostname that allow CORS"`
+
+	SqlConnection string `help:"SQL connection string"`
+
+	DNSServer    string   `help:"Address of DNS server"`
+	DNSDomain    string   `help:"Domain suffix for virtual servers"`
+	DNSResolvers []string `help:"Upstream DNS resolvers"`
+
+	Debug        bool     `help:"Show debug information"`
+	Timeout      int      `default:"600" help:"Maximal number of seconds to wait for a response"`
+	AuthURLStr   string   `default:"$AUTH_URL" help:"Authentication URL, default to env[AUTH_URL]"`
+	EndpointType string   `default:"publicURL" help:"Default to env[ENPOINT_TYPE] or publicURL" choices:"publicURL|internalURL"`
+	Endpoints    []string `help:"endpoints"`
+	SUBCOMMAND   string   `help:"climc subcommand" subcommand:"true"`
 }
 
 // argument
@@ -74,9 +92,7 @@ func main() {
 		fmt.Print(parser.HelpString())
 	} else {
 		fmt.Printf("################## Options #################\n")
-		fmt.Printf("AuthURLStr = %s\n", options.AuthURLStr)
-		fmt.Printf("Timeout = %d\n", options.Timeout)
-		fmt.Printf("EndpointType = %s\n", options.EndpointType)
+		fmt.Printf("%#v\n", options)
 		fmt.Printf("############################################\n")
 		subcmd := parser.GetSubcommand()
 		if subcmd == nil {
