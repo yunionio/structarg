@@ -851,6 +851,14 @@ func (this *ArgumentParser) ParseArgs(args []string, ignore_unknown bool) error 
 	return err
 }
 
+func isQuotedByChar(str string, quoteChar byte) bool {
+	return str[0] == quoteChar && str[len(str)-1] == quoteChar
+}
+
+func isQuoted(str string) bool {
+	return isQuotedByChar(str, '"') || isQuotedByChar(str, '\'')
+}
+
 func (this *ArgumentParser) parseKeyValue(key, value string) error {
 	arg := this.findOptionalArgument(key)
 	if arg != nil {
@@ -864,6 +872,9 @@ func (this *ArgumentParser) parseKeyValue(key, value string) error {
 				}
 			}
 		} else {
+			if !isQuoted(value) {
+				value = fmt.Sprintf("\"%s\"", value)
+			}
 			values := utils.FindWords([]byte(value), 0)
 			if len(values) == 1 {
 				return arg.SetValue(values[0])
