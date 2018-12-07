@@ -79,7 +79,7 @@ func TestPositional(t *testing.T) {
 	}
 }
 
-func TestPositionalAppend(t *testing.T) {
+func TestNonPositionalOrder(t *testing.T) {
 	p, err := newParser(
 		&struct {
 			Opt0 string
@@ -90,14 +90,14 @@ func TestPositionalAppend(t *testing.T) {
 		}{},
 	)
 	if err != nil {
-		t.Errorf("err expected: %s", err)
+		t.Errorf("err unexpected: %s", err)
 		return
 	}
 	if len(p.optArgs) != 5 {
 		t.Errorf("num optionals want 5, got %d", len(p.optArgs))
 		return
 	}
-	// check order
+	// make sure that required options come after optional options
 	required := false
 	for i, arg := range p.optArgs {
 		if !arg.IsRequired() {
