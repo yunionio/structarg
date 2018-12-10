@@ -79,7 +79,7 @@ func TestPositional(t *testing.T) {
 	}
 }
 
-func TestPositionalAppend(t *testing.T) {
+func TestNonPositionalOrder(t *testing.T) {
 	p, err := newParser(
 		&struct {
 			Opt0 string
@@ -90,14 +90,14 @@ func TestPositionalAppend(t *testing.T) {
 		}{},
 	)
 	if err != nil {
-		t.Errorf("err expected: %s", err)
+		t.Errorf("err unexpected: %s", err)
 		return
 	}
 	if len(p.optArgs) != 5 {
 		t.Errorf("num optionals want 5, got %d", len(p.optArgs))
 		return
 	}
-	// check order
+	// make sure that required options come after optional options
 	required := false
 	for i, arg := range p.optArgs {
 		if !arg.IsRequired() {
@@ -321,4 +321,80 @@ func TestIgnoreUnexported(t *testing.T) {
 	}
 	args := []string{"--string", ""}
 	p.ParseArgs(args, true)
+}
+
+func TestStructMember(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		type L struct {
+			NonPos string
+			POS    string
+		}
+		s := &struct {
+			L
+			M struct {
+				NonPos string
+				POS    string
+			}
+			N struct {
+				NonPos string
+				POS    string
+			}
+		}{}
+		p, err := newParser(s)
+		if err != nil {
+			t.Fatalf("newParser failed: %s", err)
+		}
+		args := []string{
+			"--non-pos", "l-non-pos",
+			"--m-non-pos", "m-non-pos",
+			"--n-non-pos", "n-non-pos",
+			"L_POS",
+			"M_POS",
+			"N_POS",
+		}
+		err = p.ParseArgs(args, true)
+		if err != nil {
+			t.Fatalf("ParseArgs failed: %s", err)
+		}
+		if s.L.NonPos != "l-non-pos" || s.L.POS != "L_POS" ||
+			s.M.NonPos != "m-non-pos" || s.M.POS != "M_POS" ||
+			s.N.NonPos != "n-non-pos" || s.N.POS != "N_POS" {
+			t.Errorf("something does not match\npassed: %#v\ngot: %#v", args, s)
+		}
+	})
+	t.Run("name duplicate (embedded vs. non-embedded)", func(t *testing.T) {
+		type L struct {
+			MNonPos string
+			POS     string
+		}
+		s := &struct {
+			L
+			M struct {
+				NonPos string
+				POS    string
+			}
+		}{}
+		_, err := newParser(s)
+		if err == nil {
+			t.Fatalf("expecting error")
+		}
+	})
+	t.Run("name duplicate (across embedded)", func(t *testing.T) {
+		type L struct {
+			NonPos string
+			POS    string
+		}
+		type M struct {
+			NonPos string
+			POS    string
+		}
+		s := &struct {
+			L
+			M
+		}{}
+		_, err := newParser(s)
+		if err == nil {
+			t.Fatalf("expecting error")
+		}
+	})
 }
