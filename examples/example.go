@@ -32,7 +32,7 @@ type Options struct {
 	Timeout      int      `default:"600" help:"Maximal number of seconds to wait for a response"`
 	AuthURLStr   string   `default:"$AUTH_URL" help:"Authentication URL, default to env[AUTH_URL]"`
 	EndpointType string   `default:"publicURL" help:"Default to env[ENPOINT_TYPE] or publicURL" choices:"publicURL|internalURL"`
-	Endpoints    []string `help:"endpoints"`
+	Endpoints    []string `help:"endpoints" json:"end-point"`
 	SUBCOMMAND   string   `help:"climc subcommand" subcommand:"true"`
 }
 
