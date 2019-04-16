@@ -199,12 +199,12 @@ func TestBoolField(t *testing.T) {
 	})
 	t.Run("--flags", func(t *testing.T) {
 		s := &struct {
-			Bool              bool
-			BoolP             *bool
-			BoolDefaultTrue   bool  `default:true`
-			BoolPDefaultTrue  *bool `default:true`
-			BoolDefaultFalse  bool  `default:false`
-			BoolPDefaultFalse *bool `default:false`
+			Bool                bool
+			BoolPtr             *bool
+			BoolDefaultTrue     bool  `default:true`
+			BoolPtrDefaultTrue  *bool `default:true`
+			BoolDefaultFalse    bool  `default:false`
+			BoolPtrDefaultFalse *bool `default:false`
 		}{}
 		p, err := newParser(s)
 		if err != nil {
@@ -214,17 +214,17 @@ func TestBoolField(t *testing.T) {
 			"--bool",
 			"--bool-p",
 			"--bool-default-true",
-			"--bool-p-default-true",
+			"--bool-ptr-default-true",
 			"--bool-default-false",
-			"--bool-p-default-false",
+			"--bool-ptr-default-false",
 		}
 		err = p.ParseArgs(args, false)
 		if err != nil {
 			t.Fatalf("ParseArgs failed: %s", err)
 		}
-		if !(s.Bool && s.BoolP != nil && *s.BoolP &&
-			!s.BoolDefaultTrue && s.BoolPDefaultTrue != nil && !*s.BoolPDefaultTrue &&
-			s.BoolDefaultFalse && s.BoolPDefaultFalse != nil && *s.BoolPDefaultFalse) {
+		if !(s.Bool && s.BoolPtr != nil && *s.BoolPtr &&
+			!s.BoolDefaultTrue && s.BoolPtrDefaultTrue != nil && !*s.BoolPtrDefaultTrue &&
+			s.BoolDefaultFalse && s.BoolPtrDefaultFalse != nil && *s.BoolPtrDefaultFalse) {
 			t.Errorf("wrong parse result: %#v", s)
 		}
 	})
@@ -364,7 +364,7 @@ func TestStructMember(t *testing.T) {
 	})
 	t.Run("name duplicate (embedded vs. non-embedded)", func(t *testing.T) {
 		type L struct {
-			MNonPos string
+			MNonPos string `token:"m-non-pos"`
 			POS     string
 		}
 		s := &struct {
