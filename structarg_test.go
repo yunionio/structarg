@@ -28,6 +28,14 @@ func newParser(d interface{}) (*ArgumentParser, error) {
 	return p, err
 }
 
+func mustNewParser(t *testing.T, d interface{}) *ArgumentParser {
+	p, err := newParser(d)
+	if err != nil {
+		t.Fatalf("new parser: %v", err)
+	}
+	return p
+}
+
 func TestPositional(t *testing.T) {
 	p, err := newParser(
 		&struct {
@@ -94,7 +102,7 @@ func TestPositional(t *testing.T) {
 }
 
 func TestNonPositionalOrder(t *testing.T) {
-	p, err := newParser(
+	p := mustNewParser(t,
 		&struct {
 			Opt0 string
 			Opt1 string `required:"true"`
@@ -103,10 +111,6 @@ func TestNonPositionalOrder(t *testing.T) {
 			Opt4 string
 		}{},
 	)
-	if err != nil {
-		t.Errorf("err unexpected: %s", err)
-		return
-	}
 	if len(p.optArgs) != 5 {
 		t.Errorf("num optionals want 5, got %d", len(p.optArgs))
 		return
@@ -196,13 +200,9 @@ func TestBoolField(t *testing.T) {
 			BoolDefaultFalse  bool  `default:"false"`
 			BoolPDefaultFalse *bool `default:"false"`
 		}{}
-		p, err := newParser(s)
-		if err != nil {
-			t.Fatalf("newParser failed: %s", err)
-		}
+		p := mustNewParser(t, s)
 		args := []string{}
-		err = p.ParseArgs(args, false)
-		if err != nil {
+		if err := p.ParseArgs(args, false); err != nil {
 			t.Fatalf("ParseArgs failed: %s", err)
 		}
 		if !(!s.Bool && s.BoolP == nil &&
@@ -220,10 +220,7 @@ func TestBoolField(t *testing.T) {
 			BoolDefaultFalse    bool  `default:"false"`
 			BoolPtrDefaultFalse *bool `default:"false"`
 		}{}
-		p, err := newParser(s)
-		if err != nil {
-			t.Fatalf("newParser failed: %s", err)
-		}
+		p := mustNewParser(t, s)
 		args := []string{
 			"--bool",
 			"--bool-p",
@@ -232,8 +229,7 @@ func TestBoolField(t *testing.T) {
 			"--bool-default-false",
 			"--bool-ptr-default-false",
 		}
-		err = p.ParseArgs(args, false)
-		if err != nil {
+		if err := p.ParseArgs(args, false); err != nil {
 			t.Fatalf("ParseArgs failed: %s", err)
 		}
 		if !(s.Bool && s.BoolPtr != nil && *s.BoolPtr &&
@@ -248,17 +244,13 @@ func TestChoices(t *testing.T) {
 	s := &struct {
 		String string `choices:"tcp|udp|http|https"`
 	}{}
-	p, err := newParser(s)
-	if err != nil {
-		t.Fatalf("newParser failed: %s", err)
-	}
+	p := mustNewParser(t, s)
 	args := []string{"--string", ""}
 	t.Run("good choices", func(t *testing.T) {
 		choices := []string{"tcp", "udp", "http", "https"}
 		for _, choice := range choices {
 			args[1] = choice
-			err = p.ParseArgs(args, false)
-			if err != nil {
+			if err := p.ParseArgs(args, false); err != nil {
 				t.Fatalf("ParseArgs failed: %s", err)
 			}
 			if s.String != choice {
@@ -270,8 +262,7 @@ func TestChoices(t *testing.T) {
 		choices := []string{"", "et"}
 		for _, choice := range choices {
 			args[1] = choice
-			err = p.ParseArgs(args, false)
-			if err == nil {
+			if err := p.ParseArgs(args, false); err == nil {
 				t.Fatalf("ParseArgs should error")
 			}
 			if s.String != "" {
@@ -285,10 +276,7 @@ func TestArgValue(t *testing.T) {
 	s := &struct {
 		String string
 	}{}
-	p, err := newParser(s)
-	if err != nil {
-		t.Fatalf("newParser failed: %s", err)
-	}
+	p := mustNewParser(t, s)
 	args := []string{"--string", ""}
 	cases := []struct {
 		name  string
@@ -329,10 +317,7 @@ func TestIgnoreUnexported(t *testing.T) {
 	s := &struct {
 		unexported string
 	}{}
-	p, err := newParser(s)
-	if err != nil {
-		t.Fatalf("newParser failed: %s", err)
-	}
+	p := mustNewParser(t, s)
 	args := []string{"--string", ""}
 	p.ParseArgs(args, true)
 }
@@ -354,10 +339,7 @@ func TestStructMember(t *testing.T) {
 				POS    string
 			}
 		}{}
-		p, err := newParser(s)
-		if err != nil {
-			t.Fatalf("newParser failed: %s", err)
-		}
+		p := mustNewParser(t, s)
 		args := []string{
 			"--non-pos", "l-non-pos",
 			"--m-non-pos", "m-non-pos",
@@ -366,8 +348,7 @@ func TestStructMember(t *testing.T) {
 			"M_POS",
 			"N_POS",
 		}
-		err = p.ParseArgs(args, true)
-		if err != nil {
+		if err := p.ParseArgs(args, true); err != nil {
 			t.Fatalf("ParseArgs failed: %s", err)
 		}
 		if s.L.NonPos != "l-non-pos" || s.L.POS != "L_POS" ||
