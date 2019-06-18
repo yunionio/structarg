@@ -15,6 +15,7 @@
 package structarg
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -238,6 +239,22 @@ func TestBoolField(t *testing.T) {
 			t.Errorf("wrong parse result: %#v", s)
 		}
 	})
+	t.Run(".conf", func(t *testing.T) {
+		s := &struct {
+			BoolDefaultTrue bool `default:"true"`
+		}{}
+		p := mustNewParser(t, s)
+		r := bytes.NewBufferString(`
+bool_default_true = False
+               `)
+		if err := p.parseReader(r); err != nil {
+			t.Fatalf("parse reader: %v", err)
+		}
+		if s.BoolDefaultTrue {
+			t.Errorf("bool_default_true should be false, got %v", s.BoolDefaultTrue)
+		}
+	})
+
 }
 
 func TestChoices(t *testing.T) {
