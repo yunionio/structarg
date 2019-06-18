@@ -32,8 +32,8 @@ func TestPositional(t *testing.T) {
 	p, err := newParser(
 		&struct {
 			POS            string
-			NONPOSREQUIRED string `positional:false required:true`
-			NONPOS         string `positional:false`
+			NONPOSREQUIRED string `positional:"false" required:"true"`
+			NONPOS         string `positional:"false"`
 		}{},
 	)
 	if err != nil {
@@ -97,9 +97,9 @@ func TestNonPositionalOrder(t *testing.T) {
 	p, err := newParser(
 		&struct {
 			Opt0 string
-			Opt1 string `required:true`
+			Opt1 string `required:"true"`
 			Opt2 string
-			Opt3 string `required:true`
+			Opt3 string `required:"true"`
 			Opt4 string
 		}{},
 	)
@@ -131,7 +131,7 @@ func TestRequired(t *testing.T) {
 	t.Run("optional positional", func(t *testing.T) {
 		_, err := newParser(
 			&struct {
-				POS string `required:false`
+				POS string `required:"false"`
 			}{},
 		)
 		if err == nil {
@@ -141,7 +141,7 @@ func TestRequired(t *testing.T) {
 	t.Run("default positional", func(t *testing.T) {
 		_, err := newParser(
 			&struct {
-				POS string `default:baddefault`
+				POS string `default:"baddefault"`
 			}{},
 		)
 		if err == nil {
@@ -151,7 +151,7 @@ func TestRequired(t *testing.T) {
 	t.Run("required non-positional", func(t *testing.T) {
 		p, err := newParser(
 			&struct {
-				RequiredOpt string `required:true`
+				RequiredOpt string `required:"true"`
 				Opt         string
 			}{},
 		)
@@ -178,7 +178,7 @@ func TestRequired(t *testing.T) {
 func TestNonPositionalRequiredWithDefault(t *testing.T) {
 	_, err := newParser(
 		&struct {
-			Opt int `default:100 required:true`
+			Opt int `default:"100" required:"true"`
 		}{},
 	)
 	if err == nil {
@@ -191,10 +191,10 @@ func TestBoolField(t *testing.T) {
 		s := &struct {
 			Bool              bool
 			BoolP             *bool
-			BoolDefaultTrue   bool  `default:true`
-			BoolPDefaultTrue  *bool `default:true`
-			BoolDefaultFalse  bool  `default:false`
-			BoolPDefaultFalse *bool `default:false`
+			BoolDefaultTrue   bool  `default:"true"`
+			BoolPDefaultTrue  *bool `default:"true"`
+			BoolDefaultFalse  bool  `default:"false"`
+			BoolPDefaultFalse *bool `default:"false"`
 		}{}
 		p, err := newParser(s)
 		if err != nil {
@@ -215,10 +215,10 @@ func TestBoolField(t *testing.T) {
 		s := &struct {
 			Bool                bool
 			BoolPtr             *bool
-			BoolDefaultTrue     bool  `default:true`
-			BoolPtrDefaultTrue  *bool `default:true`
-			BoolDefaultFalse    bool  `default:false`
-			BoolPtrDefaultFalse *bool `default:false`
+			BoolDefaultTrue     bool  `default:"true"`
+			BoolPtrDefaultTrue  *bool `default:"true"`
+			BoolDefaultFalse    bool  `default:"false"`
+			BoolPtrDefaultFalse *bool `default:"false"`
 		}{}
 		p, err := newParser(s)
 		if err != nil {
@@ -246,7 +246,7 @@ func TestBoolField(t *testing.T) {
 
 func TestChoices(t *testing.T) {
 	s := &struct {
-		String string `choices:tcp|udp|http|https`
+		String string `choices:"tcp|udp|http|https"`
 	}{}
 	p, err := newParser(s)
 	if err != nil {
