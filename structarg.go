@@ -56,6 +56,7 @@ type Argument interface {
 	DoAction() error
 	Validate() error
 	SetDefault()
+	IsSet() bool
 }
 
 type SingleArgument struct {
@@ -589,6 +590,10 @@ func (this *SingleArgument) Validate() error {
 	return nil
 }
 
+func (this *SingleArgument) IsSet() bool {
+	return this.isSet
+}
+
 func (this *MultiArgument) IsMulti() bool {
 	return true
 }
@@ -912,6 +917,9 @@ func isQuoted(str string) bool {
 func (this *ArgumentParser) parseKeyValue(key, value string) error {
 	arg := this.findOptionalArgument(key, true)
 	if arg != nil {
+		if arg.IsSet() {
+			return nil
+		}
 		if arg.IsMulti() {
 			if value[0] == '(' {
 				value = strings.Trim(value, "()")
@@ -1009,6 +1017,9 @@ func (this *ArgumentParser) parseJSONKeyValue(key string, obj jsonutils.JSONObje
 		log.Warningf("Cannot find argument %s", token)
 		return nil
 	}
+	if arg.IsSet() {
+		return nil
+	}
 	// process multi argument
 	if arg.IsMulti() {
 		array, ok := obj.(*jsonutils.JSONArray)
@@ -1042,7 +1053,7 @@ func (this *ArgumentParser) ParseFile(filepath string) error {
 }
 
 func (this *ArgumentParser) parseReader(r io.Reader) error {
-		scanner := bufio.NewScanner(r)
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(removeComments(line))
