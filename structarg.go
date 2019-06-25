@@ -19,11 +19,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
 	"yunion.io/x/pkg/gotypes"
 	"yunion.io/x/pkg/util/reflectutils"
@@ -953,7 +955,7 @@ func line2KeyValue(line string) (string, string, error) {
 	// first remove comments
 	pos := strings.IndexByte(line, '=')
 	if pos > 0 && pos < len(line) {
-		key := strings.Replace(strings.Trim(line[:pos], " "), "_", "-", -1)
+		key := keyToToken(line[:pos])
 		val := strings.Trim(line[pos+1:], " ")
 		return key, val, nil
 	} else {
@@ -971,8 +973,76 @@ func removeCharacters(input, charSet string) string {
 	return strings.Map(filter, input)
 }
 
+func (this *ArgumentParser) ParseYAMLFile(filepath string) error {
+	content, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return fmt.Errorf("read file %s: %v", filepath, err)
+	}
+	obj, err := jsonutils.ParseYAML(string(content))
+	if err != nil {
+		return fmt.Errorf("parse yaml to json object: %v", err)
+	}
+	dict, ok := obj.(*jsonutils.JSONDict)
+	if !ok {
+		return fmt.Errorf("object %s is not JSONDict", obj.String())
+	}
+	return this.parseJSONDict(dict)
+}
+
+func (this *ArgumentParser) parseJSONDict(dict *jsonutils.JSONDict) error {
+	for key, obj := range dict.Value() {
+		if err := this.parseJSONKeyValue(key, obj); err != nil {
+			return fmt.Errorf("parse json %s: %s: %v", key, obj.String(), err)
+		}
+	}
+	return nil
+}
+
+func keyToToken(key string) string {
+	return strings.Replace(strings.Trim(key, " "), "_", "-", -1)
+}
+
+func (this *ArgumentParser) parseJSONKeyValue(key string, obj jsonutils.JSONObject) error {
+	token := keyToToken(key)
+	arg := this.findOptionalArgument(token, true)
+	if arg == nil {
+		log.Warningf("Cannot find argument %s", token)
+		return nil
+	}
+	// process multi argument
+	if arg.IsMulti() {
+		array, ok := obj.(*jsonutils.JSONArray)
+		if !ok {
+			return fmt.Errorf("%s object value is not array", key)
+		}
+		for _, item := range array.Value() {
+			str, err := item.GetString()
+			if err != nil {
+				return err
+			}
+			if err := arg.SetValue(str); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// process single argument
+	str, err := obj.GetString()
+	if err != nil {
+		return err
+	}
+	return arg.SetValue(str)
+}
+
+func (this *ArgumentParser) ParseFile(filepath string) error {
+	if err := this.ParseYAMLFile(filepath); err == nil {
+		return nil
+	}
+	return this.ParseTornadoFile(filepath)
+}
+
 func (this *ArgumentParser) parseReader(r io.Reader) error {
-	scanner := bufio.NewScanner(r)
+		scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(removeComments(line))
@@ -997,7 +1067,7 @@ func (this *ArgumentParser) parseReader(r io.Reader) error {
 	return nil
 }
 
-func (this *ArgumentParser) ParseFile(filepath string) error {
+func (this *ArgumentParser) ParseTornadoFile(filepath string) error {
 	file, e := os.Open(filepath)
 	if e != nil {
 		return e

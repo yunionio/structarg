@@ -16,7 +16,10 @@ package structarg
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
+
+	"yunion.io/x/jsonutils"
 )
 
 func newParser(d interface{}) (*ArgumentParser, error) {
@@ -409,4 +412,97 @@ func TestStructMember(t *testing.T) {
 			t.Fatalf("expecting error")
 		}
 	})
+}
+
+func TestArgumentParser_parseJSONDict(t *testing.T) {
+	toJSONDict := func(input map[string]interface{}) *jsonutils.JSONDict {
+		return jsonutils.Marshal(input).(*jsonutils.JSONDict)
+	}
+
+	tests := []struct {
+		name string
+		//parser  *ArgumentParser
+		inputTarget interface{}
+		args        *jsonutils.JSONDict
+		wantTarget  interface{}
+		wantErr     bool
+	}{
+		{
+			name: "parse json dict",
+			inputTarget: &struct {
+				Name     string
+				Number   int
+				Networks []string
+				Quoted   string
+				Quotes   []string
+			}{},
+			args: toJSONDict(map[string]interface{}{
+				"name":     "args",
+				"number":   1,
+				"networks": []string{"net1", "net2"},
+				"quoted":   `"1"`,
+				"quotes":   []string{`"1"`, `"2"`},
+			}),
+			wantTarget: &struct {
+				Name     string
+				Number   int
+				Networks []string
+				Quoted   string
+				Quotes   []string
+			}{
+				Name:     "args",
+				Number:   1,
+				Networks: []string{"net1", "net2"},
+				Quoted:   `"1"`,
+				Quotes:   []string{`"1"`, `"2"`},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser, err := newParser(tt.inputTarget)
+			if err != nil {
+				t.Errorf("newParser: %v", err)
+				return
+			}
+			if err := parser.parseJSONDict(tt.args); (err != nil) != tt.wantErr {
+				t.Errorf("ArgumentParser.parseJSONDict() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(tt.inputTarget, tt.wantTarget) {
+				t.Errorf("inputTarget = %#v, wantTarget = %#v", tt.inputTarget, tt.wantTarget)
+				return
+			}
+			t.Logf("Parser target: %#v", tt.inputTarget)
+		})
+	}
+}
+
+func Test_keyToToken(t *testing.T) {
+	type args struct {
+		key string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "dns_domain_a",
+			args: args{"dns_domain_a"},
+			want: "dns-domain-a",
+		},
+		{
+			name: "test-case_1",
+			args: args{"test-case_1"},
+			want: "test-case-1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := keyToToken(tt.args.key); got != tt.want {
+				t.Errorf("keyToToken() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
