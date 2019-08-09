@@ -17,6 +17,7 @@ package structarg
 import (
 	"bytes"
 	"reflect"
+	"strings"
 	"testing"
 
 	"yunion.io/x/jsonutils"
@@ -279,11 +280,16 @@ func TestChoices(t *testing.T) {
 		}
 	})
 	t.Run("bad choices", func(t *testing.T) {
-		choices := []string{"", "et"}
+		choices := []string{"", "et", "ud", "dp"}
 		for _, choice := range choices {
 			args[1] = choice
 			if err := p.ParseArgs(args, false); err == nil {
 				t.Fatalf("ParseArgs should error")
+			} else {
+				errStr := err.Error()
+				if !strings.Contains(errStr, ", accepts ") && !strings.Contains(errStr, ", did you mean ") {
+					t.Errorf("should error with expected choices, got %q", errStr)
+				}
 			}
 			if s.String != "" {
 				t.Errorf("Struct member should not be set, got %s", s.String)
