@@ -296,6 +296,65 @@ func TestChoices(t *testing.T) {
 			}
 		}
 	})
+	t.Run("empty as choice", func(t *testing.T) {
+		s := &struct {
+			OnlyEmpty *string `choices:""`
+			HasEmpty  *string `choices:"hello|"`
+		}{}
+		p := mustNewParser(t, s)
+
+		t.Run("onlyempty: empty", func(t *testing.T) {
+			if err := p.ParseArgs([]string{"--only-empty", ""}, false); err != nil {
+				t.Errorf("got err: %v", err)
+			} else if s.OnlyEmpty == nil {
+				t.Errorf("got nil")
+			}
+		})
+
+		s.OnlyEmpty = nil
+		t.Run("onlyempty: notempty", func(t *testing.T) {
+			if err := p.ParseArgs([]string{"--only-empty", "notempty"}, false); err == nil {
+				t.Errorf("no err")
+			}
+			if s.OnlyEmpty != nil {
+				t.Errorf("got nil")
+			}
+		})
+
+		t.Run("hasempty: good", func(t *testing.T) {
+			want := "hello"
+			if err := p.ParseArgs([]string{"--has-empty", want}, false); err != nil {
+				t.Errorf("got err: %v", err)
+			} else if s.HasEmpty == nil {
+				t.Errorf("got nil")
+			} else if *s.HasEmpty != want {
+				t.Errorf("got %q, want %q", *s.HasEmpty, want)
+			}
+		})
+
+		s.HasEmpty = nil
+		t.Run("hasempty: empty", func(t *testing.T) {
+			want := ""
+			if err := p.ParseArgs([]string{"--has-empty", want}, false); err != nil {
+				t.Errorf("got err: %v", err)
+			} else if s.HasEmpty == nil {
+				t.Errorf("got nil")
+			} else if *s.HasEmpty != want {
+				t.Errorf("got %q, want %q", *s.HasEmpty, want)
+			}
+		})
+
+		s.HasEmpty = nil
+		t.Run("hasempty: bad", func(t *testing.T) {
+			arg := "world"
+			if err := p.ParseArgs([]string{"--has-empty", arg}, false); err == nil {
+				t.Errorf("no err")
+			} else if s.HasEmpty != nil {
+				t.Errorf("got %q, want nil", *s.HasEmpty)
+			}
+		})
+
+	})
 }
 
 func TestArgValue(t *testing.T) {
