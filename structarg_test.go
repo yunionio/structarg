@@ -71,8 +71,9 @@ func TestPositional(t *testing.T) {
 			return
 		}
 	}
-	if len(p.optArgs) != 2 {
-		t.Errorf("wrong number of optionals, want 2, got %d", len(p.optArgs))
+	// including help optional argument
+	if len(p.optArgs) != 3 {
+		t.Errorf("wrong number of optionals, want 3, got %d", len(p.optArgs))
 		return
 	} else {
 		var a Argument
@@ -90,7 +91,7 @@ func TestPositional(t *testing.T) {
 			return
 		}
 
-		a = p.optArgs[1]
+		a = p.optArgs[2] // offset by help argument
 		if a.IsPositional() {
 			t.Errorf("expecting positional argument, got %s", a)
 			return
@@ -116,8 +117,9 @@ func TestNonPositionalOrder(t *testing.T) {
 			Opt4 string
 		}{},
 	)
-	if len(p.optArgs) != 5 {
-		t.Errorf("num optionals want 5, got %d", len(p.optArgs))
+	// including help arg
+	if len(p.optArgs) != 6 {
+		t.Errorf("num optionals want 6, got %d", len(p.optArgs))
 		return
 	}
 	// make sure that required options come after optional options
@@ -168,12 +170,13 @@ func TestRequired(t *testing.T) {
 			t.Errorf("errored: %s", err)
 			return
 		}
-		if len(p.optArgs) != 2 {
-			t.Errorf("expecting 2 optArgs, got %d", len(p.optArgs))
+		// including help arg
+		if len(p.optArgs) != 3 {
+			t.Errorf("expecting 3 optArgs, got %d", len(p.optArgs))
 			return
 		}
 		// the required ones should come at last
-		a := p.optArgs[1]
+		a := p.optArgs[2] // offset by help argument
 		if !a.IsRequired() {
 			t.Errorf("argument %s is optional, want required", a)
 			return
